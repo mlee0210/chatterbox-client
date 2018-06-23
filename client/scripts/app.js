@@ -55,17 +55,30 @@ App.prototype.clearMessages = function () {
 
 App.prototype.renderMessage = function (message) {
 //   // block these &, <, >, ", ', `, , !, @, $, %, (, ), =, +, {, }, [, and ]
-  if ($('#roomSelect option[value=' + message.roomname + ']') !== message.roomname) {
-    $('#roomSelect').append('<option value=\"' + message.roomname + '\">' + message.roomname + '</option>');
-  } 
-  $('#chats').prepend('<div><h1>' + message.username + '</h1><p>' + message.text + '</p></div>');
+  if ($(`#roomSelect option[value=${message.roomname}]`) !== message.roomname) {
+    $('#roomSelect').append(`<option value= ${message.roomname}>${message.roomname}</option>`);
+  }  
+  $('#chats').prepend(`<div id=message class=${message.roomname}><h1>${message.username}</h1><p>${message.text}</p></div>`);
 };
 
 App.prototype.renderRoom = function () {
   // $('#chats').append('<div id=' + roomName + '></div>');
   // $('#roomSelect').append('<a href=\"#\" id=\"roomName\">' + roomName + '</a>');
-  var selectedRoom = $("#roomSelect option:selected").val();
-  console.log(selectedRoom);
+  $('#chats').toggle(true);
+  var selectedRoom = $('#roomSelect option:selected').val();
+  if (selectedRoom !== 'Rooms:') {
+    $('#chats').find(`.${selectedRoom}`).toggle();
+  }
+  
+  // $('#message').each(function () {
+  //   console.log($(this));
+  //   if ($(this).val() === selectedRoom) { $(this).toggle(); }
+  // });
+  // if ($('#chats').find('*').val() === selectedRoom) {
+  //   console.log('HR99 is the *best*');
+  //   $('#chats').find('*').toggle();
+  // }
+  // console.log(selectedRoom);
   // iterate through all messages and only show messages with matching selected room
   // var all = document.getElementsByTagName("*");
 
@@ -93,7 +106,12 @@ let message2 = new newMessage('Michael', 'Hi', 'sfm9');
 // app.send(message);
 app.renderMessage(message1);
 app.renderMessage(message2);
-app.renderRoom();
+// app.renderRoom();
+
+$('select').on('change', function() {
+  app.renderRoom();
+});
+
 // app.fetch();
 // });
 
