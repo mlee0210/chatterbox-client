@@ -29,14 +29,26 @@
       <h1>chatterbox</h1>
       <!-- Your HTML goes here! -->
     </div>
-<!--     <script src="scripts/dropDown.js"></script>
-    <div id="dropdown" class="dropdown">
-      <button onclick="myFunction()" class="dropbtn">Rooms: </button> -->
-<!--     </div> -->
-    <div id="chats"></div>
+<!--     <form id='send' method="post">
+      Username:<br>
+      <input type="text" id='inputUsername' name="inputUsername" size="50"><br>
+      Text:<br>
+      <input type="text" id='inputText' name="inputText" size="50"><br>
+      Room:<br>
+      <input type="text" id ='inputRoom' name="inputRoom" size="50"><br>
+      <input type="submit" class="submit" value="Submit">
+    </form> -->
+    <div>
+      <input type="text" id='inputUsername' name="username" size="50" placeholder="username"><br>
+      <input type="text" id='inputText' name="text" size="50" placeholder="username"><br>
+      <input type="text" id ='inputRoom' name="room" size="50" placeholder="username"><br>
+      <button type="button" id='send' class="submit">Submit</button>
+    </div>
     <select id="roomSelect">
       <option>Rooms:</option>
     </select>
+    <div id='friends'>Friend's List</div>
+    <div id="chats"></div>
     <script src="scripts/app.js"></script>
   </body>
 </html>

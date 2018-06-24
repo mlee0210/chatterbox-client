@@ -3,6 +3,7 @@
 //code to connect to server
 const App = function () {
   this.server = 'http://parse.sfm8.hackreactor.com/chatterbox/classes/messages';
+  this.APIParam = {order: '-createdAt'};
 };
 
 App.prototype.init = function () {
@@ -30,17 +31,26 @@ App.prototype.fetch = function () {
   $.ajax({
     // This is the url you should use to communicate with the parse API server.
     url: this.server,
+    data: this.APIParam,
     type: 'GET',
-    // do we need to define the data for a get request
-    // data: JSON.stringify(message)
     success: function (data) {
       console.log('chatterbox: Message received');
-      // for (let val of data.results) {
-      //   if (val.text.indexOf('script') < 0) {
-      //     $(val).appendTo('#chats');
-      //   }
-      // }
-      // console.log(data);
+      let cleanObj = {};
+      for (let val of data.results) {
+        // let newString = '';
+        // change < into &lt and > into &gt
+        // console.log('object: ' + Object.keys(val));
+        // debugger;
+        for (let key in val) {
+          if (key !== 'createdAt' && key !== 'objectId' && key !== 'updatedAt') {
+            cleanObj[key] = escapeChar(val[key]);
+          } else {
+            cleanObj[key] = val[key];
+          }
+        }
+        // send newString to renderMessages
+        app.renderMessage(cleanObj);
+      }
     },
     error: function (data) {
       // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
@@ -49,49 +59,67 @@ App.prototype.fetch = function () {
   });
 };
 
+const escapeChar = function (string) {
+  let badChar = {'\&':'&amp', '\<':'&lt', '\>':'&gt', '\"':'&quot', '\'':'&apos', '\`':'&grave', '\,':'&comma', '\!':'&excl', '\@':'&commat', '\$':'&dollar', '\%':'&percnt', '\(':'&lpar', '\)':'&rpar', '\=':'&equals', '\+':'&plus', '\{':'&lbrace', '\}':'&rbrace', '\[':'&lbrack', '\]':'&rbrack'};
+  let cleanString = ''
+  if (!string) {
+    cleanString = 'null';
+    return cleanString;
+  }
+  for (let char of string) {
+    if (badChar.hasOwnProperty(char)) {
+      cleanString += badChar[char];
+    } else {
+      cleanString += char;
+    }
+  }
+  return cleanString;
+}
+
+
 App.prototype.clearMessages = function () {
   $('#chats').empty();
 };
 
 App.prototype.renderMessage = function (message) {
-//   // block these &, <, >, ", ', `, , !, @, $, %, (, ), =, +, {, }, [, and ]
-  if ($(`#roomSelect option[value=${message.roomname}]`) !== message.roomname) {
-    $('#roomSelect').append(`<option value= ${message.roomname}>${message.roomname}</option>`);
-  }  
-  $('#chats').prepend(`<div id=message class=${message.roomname}><h1>${message.username}</h1><p>${message.text}</p></div>`);
+  if (!$('#roomSelect').find('*').is(`option[value='${message.roomname}']`)) {
+    $('#roomSelect').append(`<option value='${message.roomname}'>${message.roomname}</option>`);
+  }
+  $('#chats').append(`<div id=message class='${message.roomname}'><h1 class=username id=${message.username}>${message.username}</h1><h3>${message.createdAt}</h3><p>${message.text}</p></div>`);
 };
 
 App.prototype.renderRoom = function () {
-  // $('#chats').append('<div id=' + roomName + '></div>');
-  // $('#roomSelect').append('<a href=\"#\" id=\"roomName\">' + roomName + '</a>');
-  $('#chats').toggle(true);
+  // debugger;
+  $('#chats').find('*').toggle(false);
   var selectedRoom = $('#roomSelect option:selected').val();
+  
   if (selectedRoom !== 'Rooms:') {
+    console.log(selectedRoom);  
+    $('#chats').find(`.${selectedRoom}`).find('*').toggle();
     $('#chats').find(`.${selectedRoom}`).toggle();
   }
-  
-  // $('#message').each(function () {
-  //   console.log($(this));
-  //   if ($(this).val() === selectedRoom) { $(this).toggle(); }
-  // });
-  // if ($('#chats').find('*').val() === selectedRoom) {
-  //   console.log('HR99 is the *best*');
-  //   $('#chats').find('*').toggle();
-  // }
-  // console.log(selectedRoom);
-  // iterate through all messages and only show messages with matching selected room
-  // var all = document.getElementsByTagName("*");
-
-  // for (var i=0, max=all.length; i < max; i++) {
-  //   if (i !== selectedRoom) {
-  //     hide
-  //   }
-  // }
 };
 
-// function (message) {
-//     $(message).appendTo('#chats'); 
-// })
+App.prototype.handleUsernameClick = function(chats, username) {
+  // console.log(username);
+  // console.log($('chats'));
+  let clickedUser = username.attr('id') 
+  $('#chats').find(`#${clickedUser}`).css('color', 'blue');
+  $('#friends').append(`<div>${clickedUser}</div>`)
+};
+
+App.prototype.handleSubmit = function () {
+  let newObj = {}
+  newObj.username = document.getElementById('inputUsername').value;
+  // newObj.username = inputUsername;
+  newObj.text = document.getElementById('inputText').value;
+  // newObj.username = inputText;
+  newObj.roomname = document.getElementById('inputRoom').value
+  // newObj.username = inputRoom;
+  console.log(newObj);
+  app.send(newObj);  
+};
+
 
 const newMessage = function (username, text, roomname) {
   this.username = username;
@@ -100,25 +128,20 @@ const newMessage = function (username, text, roomname) {
 };
 
 let app = new App();
-let message1 = new newMessage('David', 'Hi', 'sfm8');
-let message2 = new newMessage('Michael', 'Hi', 'sfm9');
-
-// app.send(message);
-app.renderMessage(message1);
-app.renderMessage(message2);
-// app.renderRoom();
+app.fetch();
 
 $('select').on('change', function() {
   app.renderRoom();
 });
 
-// app.fetch();
+$(document).on('click', '.username', function() {
+  console.log('here');
+  app.handleUsernameClick($('#chats'), $(this));
+});
+
+
+$(document).on('click', '.submit', function() {
+  // console.log(document.getElementById('inputUsername').value);
+  app.handleSubmit();
+});
 // });
-
-
-
-// var message = {
-//   username: 'shawndrost',
-//   text: 'trololo',
-//   roomname: '4chan'
-// };
